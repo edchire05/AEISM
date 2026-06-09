@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AEISM — Candidatura a Vogal 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green: #1a5c2a; --green-mid: #2e7d32; --green-light: #e8f5e9;
+    --red: #c62828; --red-light: #ffebee;
+    --white: #ffffff;
+    --gray50: #fafafa; --gray100: #f5f5f5; --gray200: #eeeeee;
+    --gray400: #bdbdbd; --gray600: #757575; --gray800: #424242; --gray900: #212121;
+  }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: linear-gradient(160deg, #f1f8e9 0%, #fafafa 50%, #ffebee 100%); min-height: 100vh; color: var(--gray900); }
+  header { background: var(--white); border-bottom: 3px solid var(--green); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .header-inner { max-width: 860px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; height: 68px; }
+  .logo-wrap { display: flex; align-items: center; gap: 14px; }
+  .logo-circle { width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--red); background: var(--white); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); flex-shrink: 0; }
+  .logo-circle span { font-weight: 900; font-size: 11px; color: var(--green); }
+  .logo-circle span em { color: var(--gray900); font-style: normal; }
+  .brand-name { font-weight: 900; font-size: 18px; color: var(--green); }
+  .brand-name em { color: var(--gray900); font-style: normal; }
+  .brand-sub { font-size: 10px; color: var(--gray600); font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; }
+  .flag-bar { height: 3px; display: flex; }
+  .flag-bar div:nth-child(1) { flex:1; background: var(--green); }
+  .flag-bar div:nth-child(2) { flex:1; background: var(--white); }
+  .flag-bar div:nth-child(3) { flex:1; background: var(--red); }
+  .tabs { display: flex; gap: 4px; }
+  .tab-btn { padding: 8px 18px; border-radius: 8px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+  .tab-btn.active { background: var(--green); color: var(--white); }
+  .tab-btn.inactive { background: transparent; color: var(--gray600); }
+  .tab-btn.inactive:hover { background: var(--gray100); }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 20px 60px; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .hero { text-align: center; margin-bottom: 32px; }
+  .hero-badge { display: inline-flex; background: var(--green-light); border: 1px solid #a5d6a7; border-radius: 24px; padding: 6px 20px; margin-bottom: 16px; }
+  .hero-badge span { font-size: 12px; font-weight: 700; color: var(--green-mid); letter-spacing: 1px; text-transform: uppercase; }
+  .hero h1 { font-size: 30px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 10px; }
+  .hero h1 span { color: var(--green); }
+  .hero p { color: var(--gray600); font-size: 15px; max-width: 500px; margin: 0 auto; line-height: 1.7; }
+  .card { background: var(--white); border-radius: 16px; border: 1px solid var(--gray200); padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
+  .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 20px; }
+  .field { margin-bottom: 16px; }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--gray800); margin-bottom: 6px; }
+  label .req { color: var(--red); }
+  input[type=text], input[type=email], input[type=password], select {
+    width: 100%; padding: 10px 14px; font-size: 14px; border: 1.5px solid var(--gray200);
+    border-radius: 8px; background: var(--white); color: var(--gray900); outline: none;
+    transition: border-color 0.2s; font-family: inherit;
+  }
+  input:focus, select:focus { border-color: var(--green); }
+  input.err, select.err { border-color: var(--red); }
+  select { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%23757575' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-color: var(--white); }
+  .err-msg { margin: 4px 0 0; font-size: 12px; color: var(--red); min-height: 16px; }
+  .info-box { margin: 8px 0 24px; padding: 12px 16px; background: var(--green-light); border-left: 4px solid var(--green); border-radius: 0 8px 8px 0; font-size: 12px; color: var(--green-mid); line-height: 1.6; }
+  .btn-primary { width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--green); color: var(--white); font-weight: 800; font-size: 16px; cursor: pointer; transition: background 0.2s; font-family: inherit; box-shadow: 0 4px 16px rgba(27,94,32,0.25); }
+  .btn-primary:hover { background: var(--green-mid); }
+  .btn-primary:disabled { background: var(--gray400); cursor: not-allowed; box-shadow: none; }
+  .btn-row { display: flex; gap: 12px; }
+  .btn-secondary { flex:1; padding: 12px; border-radius: 8px; border: 1.5px solid var(--gray200); background: var(--white); color: var(--gray800); font-weight: 600; font-size: 14px; cursor: pointer; font-family: inherit; }
+  .btn-secondary:hover { background: var(--gray50); }
+  .btn-confirm { flex:2; padding: 12px; border-radius: 8px; border: none; background: var(--green); color: var(--white); font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit; transition: background 0.2s; }
+  .btn-confirm:hover { background: var(--green-mid); }
+  .btn-confirm:disabled { background: var(--gray400); cursor: not-allowed; }
+  .step { display: none; }
+  .step.active { display: block; }
+  .preview-box { background: var(--gray50); border: 1px solid var(--gray200); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+  .preview-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid var(--green); }
+  .preview-brand { font-weight: 800; color: var(--green); font-size: 16px; }
+  .preview-brand em { color: var(--gray900); font-style: normal; }
+  .preview-sub { font-size: 11px; color: var(--gray600); }
+  .preview-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .preview-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--gray200); }
+  .preview-key { font-size: 13px; color: var(--gray600); font-weight: 500; }
+  .preview-val { font-size: 13px; font-weight: 700; text-align: right; max-width: 55%; }
+  .preview-motto { margin-top: 16px; padding-top: 16px; display: flex; justify-content: center; gap: 16px; }
+  .preview-motto span { font-size: 11px; font-weight: 700; }
+  .success-wrap { text-align: center; padding: 48px 24px; }
+  .success-circle { width: 72px; height: 72px; border-radius: 50%; background: var(--green-light); border: 2px solid var(--green-mid); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 32px; color: var(--green); }
+  .success-wrap h2 { color: var(--green); font-size: 24px; font-weight: 800; margin-bottom: 12px; }
+  .success-wrap p { color: var(--gray600); font-size: 15px; margin-bottom: 8px; line-height: 1.6; }
+  .btn-new { display: inline-block; margin-top: 24px; padding: 12px 32px; border-radius: 8px; border: none; background: var(--green); color: var(--white); font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; }
+  .values-row { display: flex; justify-content: center; gap: 32px; margin-top: 32px; }
+  .value-item { text-align: center; }
+  .value-icon { width: 36px; height: 36px; border-radius: 50%; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .value-label { font-size: 12px; font-weight: 700; }
+  /* ADMIN */
+  .admin-header { margin-bottom: 28px; }
+  .admin-header h2 { font-size: 24px; font-weight: 900; margin-bottom: 6px; }
+  .admin-header p { color: var(--gray600); font-size: 14px; }
+  .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+  .stat-card { background: var(--gray50); border: 1px solid var(--gray200); border-radius: 10px; padding: 14px 16px; }
+  .stat-num { font-size: 28px; font-weight: 900; }
+  .stat-label { font-size: 11px; color: var(--gray600); font-weight: 600; margin-top: 4px; }
+  .filter-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-row input { flex:1; min-width: 160px; padding: 9px 14px; font-size: 13px; }
+  .filter-row select { padding: 9px 14px; font-size: 13px; min-width: 160px; }
+  .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--gray200); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; }
+  thead tr { background: var(--green); }
+  th { padding: 12px 14px; text-align: left; color: var(--white); font-weight: 700; font-size: 12px; white-space: nowrap; }
+  tbody tr:nth-child(even) { background: var(--gray50); }
+  tbody tr { border-bottom: 1px solid var(--gray100); }
+  td { padding: 11px 14px; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; background: var(--green-light); color: var(--green-mid); border: 1px solid #a5d6a7; }
+  .table-count { margin: 12px 0 0; font-size: 12px; color: var(--gray400); }
+  .admin-login-wrap { max-width: 360px; margin: 0 auto; padding-top: 24px; text-align: center; }
+  .lock-icon { font-size: 40px; margin-bottom: 8px; }
+  .admin-login-wrap h3 { font-weight: 800; font-size: 18px; margin-bottom: 8px; }
+  .admin-login-wrap > p { color: var(--gray600); font-size: 14px; margin-bottom: 24px; }
+  .pin-input { width: 100%; padding: 12px 16px; font-size: 18px; border: 1.5px solid var(--gray200); border-radius: 8px; text-align: center; letter-spacing: 6px; font-family: monospace; margin-bottom: 8px; outline: none; }
+  .pin-input:focus { border-color: var(--green); }
+  .pin-input.err { border-color: var(--red); }
+  .pin-error { color: var(--red); font-size: 12px; min-height: 20px; margin-bottom: 8px; }
+  .export-btn { padding: 8px 16px; border-radius: 8px; border: 1.5px solid var(--green); background: var(--white); color: var(--green); font-weight: 700; font-size: 12px; cursor: pointer; font-family: inherit; margin-left: auto; display: block; margin-bottom: 16px; }
+  .export-btn:hover { background: var(--green-light); }
+  /* SETUP BANNER */
+  .setup-banner { background: #fff8e1; border: 1.5px solid #f9a825; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; }
+  .setup-banner h4 { color: #e65100; font-size: 15px; font-weight: 800; margin-bottom: 10px; }
+  .setup-banner p { font-size: 13px; color: #5d4037; line-height: 1.7; margin-bottom: 6px; }
+  .setup-banner code { background: #fff3e0; border: 1px solid #ffcc80; border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: 12px; color: #bf360c; }
+  /* LOADING */
+  .loading { text-align: center; padding: 32px; color: var(--gray400); font-size: 14px; }
+  footer { background: var(--green); color: var(--white); text-align: center; padding: 20px; font-size: 12px; }
+  footer .footer-title { font-weight: 700; margin-bottom: 4px; }
+  footer .footer-sub { opacity: 0.75; }
+  @media (max-width: 600px) {
+    .header-inner { padding: 0 14px; }
+    .tab-btn { padding: 7px 12px; font-size: 12px; }
+    .card { padding: 20px 16px; }
+    .hero h1 { font-size: 22px; }
+    .admin-stats { grid-template-columns: repeat(2, 1fr); }
+    .values-row { gap: 16px; }
+    .btn-row { flex-direction: column; }
+    .btn-secondary, .btn-confirm { flex: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-wrap">
+      <div class="logo-circle"><span>AE<em>ISM</em></span></div>
+      <div>
+        <div class="brand-name">AE<em>ISM</em></div>
+        <div class="brand-sub">Associação de Estudantes</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active"   onclick="showTab('form')">Candidatura</button>
+      <button class="tab-btn inactive" onclick="showTab('admin')">Administração</button>
+    </div>
+  </div>
+  <div class="flag-bar"><div></div><div></div><div></div></div>
+</header>
+
+<main>
+
+  <div id="page-form" class="page active">
+    <div class="hero">
+      <div class="hero-badge"><span>Eleições 2026</span></div>
+      <h1>Candidatura a <span>Vogal</span></h1>
+      <p>Preencha o formulário abaixo para formalizar a sua candidatura aos órgãos da Associação de Estudantes do ISM.</p>
+    </div>
+
+    <div class="card">
+
+      <div id="step-form" class="step active">
+        <div class="form-row">
+          <div class="field">
+            <label for="f-nome">Nome Completo <span class="req">*</span></label>
+            <input type="text" id="f-nome" placeholder="Ex: João Paulo Machava">
+            <div class="err-msg" id="err-nome"></div>
+          </div>
+          <div class="field">
+            <label for="f-codigo">Código de Estudante <span class="req">*</span></label>
+            <input type="text" id="f-codigo" placeholder="Ex: 24-023">
+            <div class="err-msg" id="err-codigo"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-email">E-mail Institucional <span class="req">*</span></label>
+          <input type="email" id="f-email" placeholder="codigo@ismonitor.ac.mz">
+          <div class="err-msg" id="err-email"></div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="f-curso">Curso <span class="req">*</span></label>
+            <select id="f-curso">
+              <option value="">Seleccione o curso</option>
+              <option>Contabilidade e Finanças</option>
+              <option>Contabilidade e Auditoria</option>
+              <option>Economia</option>
+              <option>Gestão e Informática</option>
+              <option>Psicologia Social e das Organizações</option>
+              <option>Psicologia Educacional e Orientação Vocacional</option>
+              <option>Administração Pública</option>
+              <option>Gestão de Recursos Humanos</option>
+              <option>Gestão de Empresas</option>
+              <option>Gestão Financeira</option>
+              <option>Gestão de Marketing e Relações Públicas</option>
+              <option>Antropologia</option>
+              <option>Administração Executiva</option>
+              <option>Geografia</option>
+              <option>Gestão Comercial</option>
+              <option>História</option>
+              <option>Sociologia</option>
+              <option>Informática e Gestão</option>
+              <option>Direito</option>
+              <option>Comunicação Social</option>
+              <option>Outro</option>
+            </select>
+            <div class="err-msg" id="err-curso"></div>
+          </div>
+          <div class="field">
+            <label for="f-ano">Ano Académico <span class="req">*</span></label>
+            <select id="f-ano">
+              <option value="">Seleccione o ano</option>
+              <option>1º Ano</option>
+              <option>2º Ano</option>
+              <option>3º Ano</option>
+              <option>4º Ano</option>
+            </select>
+            <div class="err-msg" id="err-ano"></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="f-regime">Regime de Ensino <span class="req">*</span></label>
+            <select id="f-regime">
+              <option value="">Seleccione o regime</option>
+              <option>Presencial</option>
+              <option>Ensino à Distância</option>
+            </select>
+            <div class="err-msg" id="err-regime"></div>
+          </div>
+          <div class="field">
+            <label for="f-cargo">Cargo de Candidatura <span class="req">*</span></label>
+            <select id="f-cargo">
+              <option value="">Seleccione o cargo</option>
+              <option>Tesoureiro</option>
+              <option>Secretário</option>
+              <option>Pedagógico</option>
+              <option>Cultura</option>
+              <option>Desporto</option>
+              <option>Comunicação</option>
+              <option>Conselho fiscal </option>
+              <option>Ação Social</option>
+            </select>
+            <div class="err-msg" id="err-cargo"></div>
+          </div>
+        </div>
+        <div class="info-box">
+          <strong>Informação:</strong> Após submissão, a sua candidatura será registada na base de dados da AEISM.
+        </div>
+        <button class="btn-primary" onclick="showPreview()">Pré-visualizar Candidatura →</button>
+      </div>
+
+      <div id="step-preview" class="step">
+        <div class="preview-box">
+          <div class="preview-header">
+            <div class="logo-circle" style="width:48px;height:48px"><span style="font-size:10px">AE<em>ISM</em></span></div>
+            <div>
+              <div class="preview-brand">AE<em>ISM</em></div>
+              <div class="preview-sub">ASSOCIAÇÃO DE ESTUDANTES • ISM</div>
+            </div>
+          </div>
+          <div class="preview-title">Resumo da Candidatura</div>
+          <div id="preview-data"></div>
+          <div class="preview-motto">
+            <span style="color:var(--green)">União •</span>
+            <span style="color:var(--gray600)">Representação •</span>
+            <span style="color:var(--red)">Inovação</span>
+          </div>
+        </div>
+        <div id="send-error" style="color:var(--red);font-size:13px;margin-bottom:12px;display:none"></div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="backToForm()">← Editar</button>
+          <button class="btn-confirm" id="btn-confirm" onclick="submitForm()">✓ Confirmar e Submeter</button>
+        </div>
+      </div>
+
+      <div id="step-success" class="step">
+        <div class="success-wrap">
+          <div class="success-circle">✓</div>
+          <h2>Candidatura Submetida!</h2>
+          <p>A sua candidatura foi registada com sucesso na base de dados da AEISM.</p>
+          <p>Iremos contactá-lo(a) brevemente pelo seu e-mail institucional.</p>
+          <button class="btn-new" onclick="resetForm()">Nova Candidatura</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="values-row">
+      <div class="value-item"><div class="value-icon" style="background:var(--green-light)">🤝</div><div class="value-label" style="color:var(--green)">União</div></div>
+      <div class="value-item"><div class="value-icon" style="background:var(--gray100)">📢</div><div class="value-label" style="color:var(--gray600)">Representação</div></div>
+      <div class="value-item"><div class="value-icon" style="background:var(--red-light)">💡</div><div class="value-label" style="color:var(--red)">Inovação</div></div>
+    </div>
+  </div>
+
+  <div id="page-admin" class="page">
+    <div class="admin-header">
+      <h2>Painel de Administração</h2>
+      <p>Candidaturas recebidas em tempo real</p>
+    </div>
+    <div class="card">
+
+      <div id="admin-login">
+        <div class="admin-login-wrap">
+          <div class="lock-icon">🔒</div>
+          <h3>Acesso Administrativo</h3>
+          <p>Introduza o PIN de administrador</p>
+          <input type="password" class="pin-input" id="pin-input" placeholder="••••••••" oninput="clearPinError()">
+          <div class="pin-error" id="pin-error"></div>
+          <button class="btn-primary" onclick="adminLogin()" style="margin-top:4px">Entrar</button>
+        </div>
+      </div>
+
+      <div id="admin-dashboard" style="display:none">
+
+        <div class="setup-banner" id="setup-banner" style="display:none">
+          <h4>⚙️ Configure o Supabase para ver os dados reais</h4>
+          <p>Abra o ficheiro <code>index.html</code> e substitua estas duas linhas no topo do JavaScript:</p>
+          <p><code>const SUPABASE_URL = 'https://irjhzsehqueomweqsuve.supabase.co';</code></p>
+          <p><code>const SUPABASE_KEY = 'sb_publishable_Kyi1UKbWSd6uM_OgzOHrhg_PvHeh';</code></p>
+          <p style="margin-top:8px">Veja as instruções completas abaixo da tabela.</p>
+        </div>
+
+        <div class="admin-stats">
+          <div class="stat-card"><div class="stat-num" style="color:var(--green)" id="stat-total">—</div><div class="stat-label">Total Candidatos</div></div>
+          <div class="stat-card"><div class="stat-num" style="color:var(--green-mid)" id="stat-cargos">—</div><div class="stat-label">Cargos Distintos</div></div>
+          <div class="stat-card"><div class="stat-num" style="color:var(--red)" id="stat-today">—</div><div class="stat-label">Registados Hoje</div></div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+          <button class="export-btn" style="margin:0" onclick="exportCSV()">⬇ Exportar CSV</button>
+          <button class="export-btn" style="margin:0;border-color:var(--green-mid)" onclick="loadDashboard()">↻ Actualizar</button>
+        </div>
+
+        <div class="filter-row">
+          <input type="text" id="search-input" placeholder="🔍 Pesquisar por nome, código ou e-mail…" oninput="renderTable()">
+          <select id="filter-cargo" onchange="renderTable()">
+            <option value="">Todos os cargos</option>
+            <option>Tesoureiro</option><option>Secretário</option><option>Pedagógico</option>
+            <option>Cultura</option><option>Desporto</option><option>Comunicação</option><option>Ação Social</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nome</th><th>Código</th><th>Curso</th><th>Ano</th><th>Regime</th><th>Cargo</th><th>Data</th></tr></thead>
+            <tbody id="candidates-tbody"><tr><td colspan="7" class="loading">A carregar candidatos…</td></tr></tbody>
+          </table>
+        </div>
+        <p class="table-count" id="table-count"></p>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-title">AEISM<br>Associação de Estudantes do Instituto Superior Monitor</div>
+  <div class="footer-sub">União • Representação • Inovação · Maputo, Moçambique</div>
+</footer>
+
+<script>
+/* ══════════════════════════════════════════════════
+   🔧 CONFIGURAÇÃO
+   ══════════════════════════════════════════════════ */
+const SUPABASE_URL = 'https://irjhzsehqueomweqsuve.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Kyi1UKbWSd6uM_OgzOHrhg_PvHeh';
+/* ══════════════════════════════════════════════════ */
+
+const ADMIN_PIN = 'aeism2026';
+const FIELDS = ['nome','codigo','email','curso','ano','regime','cargo'];
+const LABELS = { nome:'Nome Completo', codigo:'Código de Estudante', email:'E-mail Institucional', curso:'Curso', ano:'Ano Académico', regime:'Regime de Ensino', cargo:'Cargo de Candidatura' };
+
+/* CORREÇÃO AQUI: Verifica se o URL mudou do placeholder original */
+const SUPABASE_READY = SUPABASE_URL !== 'COLE_AQUI_O_URL_DO_SUPABASE';
+
+let sb = null;
+if (SUPABASE_READY) {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}
+
+let allCandidates = [];
+
+/* ── TABS ─────────────────────────────────────────── */
+function showTab(t) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + t).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.className = 'tab-btn ' + (['form','admin'][i] === t ? 'active' : 'inactive');
+  });
+}
+
+/* ── VALIDAÇÃO ────────────────────────────────────── */
+function getVal(f) { return document.getElementById('f-' + f).value.trim(); }
+
+function validate() {
+  FIELDS.forEach(f => {
+    document.getElementById('err-' + f).textContent = '';
+    document.getElementById('f-' + f).classList.remove('err');
+  });
+  const v = {}; FIELDS.forEach(f => v[f] = getVal(f));
+  let ok = true;
+  if (!v.nome)   { setErr('nome',   'Nome completo é obrigatório'); ok=false; }
+  if (!v.codigo) { setErr('codigo', 'Código de estudante é obrigatório'); ok=false; }
+  if (!v.email)  { setErr('email',  'E-mail institucional é obrigatório'); ok=false; }
+  else if (!v.email.includes('@ismonitor.ac.mz')) { setErr('email', 'Use o seu e-mail institucional (@ismonitor.ac.mz)'); ok=false; }
+  if (!v.curso)  { setErr('curso',  'Seleccione o seu curso'); ok=false; }
+  if (!v.ano)    { setErr('ano',    'Seleccione o ano académico'); ok=false; }
+  if (!v.regime) { setErr('regime', 'Seleccione o regime de ensino'); ok=false; }
+  if (!v.cargo)  { setErr('cargo',  'Seleccione o cargo de candidatura'); ok=false; }
+  return ok;
+}
+function setErr(f, msg) {
+  document.getElementById('err-' + f).textContent = msg;
+  document.getElementById('f-' + f).classList.add('err');
+}
+
+/* ── PASSOS ───────────────────────────────────────── */
+function showStep(id) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-' + id).classList.add('active');
+}
+
+function showPreview() {
+  if (!validate()) return;
+  let html = '';
+  FIELDS.forEach(f => {
+    html += `<div class="preview-row"><span class="preview-key">${LABELS[f]}</span><span class="preview-val">${getVal(f)}</span></div>`;
+  });
+  document.getElementById('preview-data').innerHTML = html;
+  document.getElementById('send-error').style.display = 'none';
+  showStep('preview');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function backToForm() { showStep('form'); }
+
+async function submitForm() {
+  const btn = document.getElementById('btn-confirm');
+  btn.disabled = true; btn.textContent = 'A registar…';
+
+  const v = {}; FIELDS.forEach(f => v[f] = getVal(f));
+  v.data = new Date().toISOString().split('T')[0];
+
+  let success = false;
+
+  if (SUPABASE_READY && sb) {
+    const { error } = await sb.from('candidatos').insert([v]);
+    if (error) {
+      document.getElementById('send-error').style.display = 'block';
+      document.getElementById('send-error').textContent = 'Erro ao guardar: ' + error.message;
+      btn.disabled = false; btn.textContent = '✓ Confirmar e Submeter';
+      return;
+    }
+    success = true;
+  } else {
+    try {
+      const stored = JSON.parse(localStorage.getItem('aeism_candidates') || '[]');
+      stored.push({ id: Date.now(), ...v });
+      localStorage.setItem('aeism_candidates', JSON.stringify(stored));
+    } catch(e) {}
+    success = true;
+  }
+
+  if (success) {
+    await new Promise(r => setTimeout(r, 600));
+    btn.disabled = false; btn.textContent = '✓ Confirmar e Submeter';
+    showStep('success');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function resetForm() {
+  FIELDS.forEach(f => {
+    const el = document.getElementById('f-' + f);
+    el.value = ''; el.classList.remove('err');
+    document.getElementById('err-' + f).textContent = '';
+  });
+  showStep('form');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ── ADMIN LOGIN ──────────────────────────────────── */
+function adminLogin() {
+  const pin = document.getElementById('pin-input').value;
+  if (pin === ADMIN_PIN) {
+    document.getElementById('admin-login').style.display    = 'none';
+    document.getElementById('admin-dashboard').style.display = 'block';
+    if (!SUPABASE_READY) {
+      document.getElementById('setup-banner').style.display = 'block';
+    }
+    loadDashboard();
+  } else {
+    document.getElementById('pin-error').textContent = 'PIN incorreto. Tente novamente.';
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-input').classList.add('err');
+  }
+}
+function clearPinError() {
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('pin-input').classList.remove('err');
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.activeElement === document.getElementById('pin-input')) adminLogin();
+});
+
+/* ── CARREGAR DADOS ───────────────────────────────── */
+async function loadDashboard() {
+  document.getElementById('candidates-tbody').innerHTML =
+    '<tr><td colspan="7" class="loading">⏳ A carregar candidatos…</td></tr>';
+
+  if (SUPABASE_READY && sb) {
+    const { data, error } = await sb
+      .from('candidatos')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      document.getElementById('candidates-tbody').innerHTML =
+        `<tr><td colspan="7" class="loading" style="color:var(--red)">Erro: ${error.message}</td></tr>`;
+      return;
+    }
+    allCandidates = data || [];
+  } else {
+    try {
+      allCandidates = JSON.parse(localStorage.getItem('aeism_candidates') || '[]');
+    } catch(e) { allCandidates = []; }
+  }
+
+  updateStats();
+  renderTable();
+}
+
+function updateStats() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('stat-total').textContent  = allCandidates.length;
+  document.getElementById('stat-cargos').textContent = new Set(allCandidates.map(c => c.cargo)).size;
+  document.getElementById('stat-today').textContent  = allCandidates.filter(c => c.data === today).length;
+}
+
+function renderTable() {
+  const q  = (document.getElementById('search-input').value || '').toLowerCase();
+  const fc = document.getElementById('filter-cargo').value;
+  const filtered = allCandidates.filter(c => {
+    const match = !q || (c.nome||'').toLowerCase().includes(q) ||
+      (c.codigo||'').toLowerCase().includes(q) || (c.email||'').toLowerCase().includes(q);
+    return match && (!fc || c.cargo === fc);
+  });
+  const tbody = document.getElementById('candidates-tbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="loading">Nenhum candidato encontrado</td></tr>';
+  } else {
+    tbody.innerHTML = filtered.map((c, i) => `
+      <tr style="background:${i%2===0?'#fff':'var(--gray50)'}">
+        <td style="font-weight:600">${esc(c.nome)}</td>
+        <td style="color:var(--gray600);font-family:monospace;font-size:12px">${esc(c.codigo)}</td>
+        <td style="color:var(--gray800)">${esc(c.curso)}</td>
+        <td style="color:var(--gray600)">${esc(c.ano)}</td>
+        <td><span class="badge">${esc(c.regime)}</span></td>
+        <td style="font-weight:600;color:var(--green);font-size:12px">${esc(c.cargo)}</td>
+        <td style="color:var(--gray400);font-size:11px">${esc(c.data)}</td>
+      </tr>`).join('');
+  }
+  document.getElementById('table-count').textContent =
+    `Mostrando ${filtered.length} de ${allCandidates.length} candidatos`;
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function exportCSV() {
+  if (allCandidates.length === 0) { alert('Não há candidatos para exportar.'); return; }
+  const headers = ['Nome','Código','Email','Curso','Ano','Regime','Cargo','Data'];
+  const rows = allCandidates.map(c =>
+    [c.nome,c.codigo,c.email,c.curso,c.ano,c.regime,c.cargo,c.data]
+      .map(v => `"${(v||'').replace(/"/g,'""')}"`)
+      .join(',')
+  );
+  const csv  = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'candidatos-aeism-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click(); URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
